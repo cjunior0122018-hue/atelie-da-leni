@@ -145,6 +145,38 @@ input:focus,textarea,select:focus{outline:2px solid var(--dourado2)}
 .radios label.sel{border-color:var(--dourado);background:#FDF3D8}
 .confia{font-size:12.5px;color:var(--suave);text-align:center;margin-top:11px;line-height:1.5}
 .btn-final{width:100%;margin-top:14px;background:var(--verde);color:#fff;border:none;border-radius:999px;padding:16px;font-size:16px;font-weight:800;box-shadow:0 8px 18px rgba(37,211,102,.35)}
+/* DETALHE DO PRODUTO */
+.det-fundo{position:fixed;inset:0;background:rgba(50,32,16,.6);z-index:85;opacity:0;pointer-events:none;transition:.25s;display:grid;place-items:center;padding:16px}
+.det-fundo.aberto{opacity:1;pointer-events:auto}
+.det{background:var(--papel);border-radius:24px;max-width:880px;width:100%;max-height:92dvh;overflow-y:auto;position:relative;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.det .fechar{position:absolute;top:12px;right:12px;z-index:3;background:var(--marrom);color:#FFF3DC;width:38px;height:38px;border-radius:50%;border:none;font-size:16px}
+.det-grid{display:grid;grid-template-columns:1fr 1fr}
+.det-foto{position:relative;background:var(--creme2)}
+.det-foto img{width:100%;height:100%;object-fit:cover;min-height:320px}
+.det-info{padding:28px 28px 24px}
+.det-info .hand{font-size:24px;color:var(--terra);font-weight:700}
+.det-info h2{font-family:'Playfair Display',serif;font-size:29px;color:var(--marrom);line-height:1.15;margin:3px 0 10px}
+.det-info .desc{font-size:15px;line-height:1.6;color:var(--txt)}
+.det-lista{list-style:none;margin:16px 0;display:grid;gap:8px}
+.det-lista li{font-size:14px;color:var(--cacau);background:var(--creme);border:1px dashed var(--linha);border-radius:10px;padding:9px 12px}
+.det-preco{font-size:30px;font-weight:800;color:var(--marrom)}
+.det-preco small{display:block;font-size:12.5px;color:var(--suave);font-weight:600}
+.det-acoes{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn-det-add{flex:1;background:var(--dourado);border:none;color:var(--marrom);font-weight:800;border-radius:999px;padding:15px 18px;font-size:15.5px;box-shadow:0 6px 14px rgba(199,154,59,.35);min-width:180px}
+.btn-det-add:disabled{background:#D8CBB4;color:#8A7A5F;box-shadow:none}
+.btn-det-fin{flex:1;background:var(--marrom);border:none;color:#FFF3DC;font-weight:800;border-radius:999px;padding:15px 18px;font-size:15.5px;min-width:180px}
+.det-rel{padding:4px 28px 26px}
+.det-rel h4{font-family:'Caveat',cursive;font-size:23px;color:var(--terra);margin-bottom:12px}
+.rel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.rel{cursor:pointer;border:1px solid var(--linha);border-radius:14px;overflow:hidden;background:#fff;transition:.15s}
+.rel:hover{transform:translateY(-3px)}
+.rel img{width:100%;aspect-ratio:1/1.05;object-fit:cover}
+.rel div{padding:9px 11px}
+.rel .rn{font-weight:700;font-size:13px;color:var(--marrom);line-height:1.25}
+.rel .rp{font-size:13.5px;font-weight:800;color:var(--terra)}
+.card .foto,.card h3{cursor:pointer}
+.dica{font-size:12px;color:var(--terra);font-weight:700}
+@media(max-width:880px){.det-grid{grid-template-columns:1fr}.det-foto img{min-height:0;max-height:46dvh}.det-info{padding:20px}}
 .toast{position:fixed;bottom:88px;left:50%;transform:translate(-50%,20px);background:var(--marrom);color:#FFF3DC;padding:12px 22px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:90;box-shadow:0 10px 24px rgba(0,0,0,.3)}
 .toast.vis{opacity:1;transform:translate(-50%,0)}
 @media(max-width:880px){
@@ -292,6 +324,10 @@ nav{display:none}
   </form>
 </aside>
 
+<div class="det-fundo" id="det-fundo" onclick="if(event.target===this)fecharProduto()">
+  <div class="det" id="det"></div>
+</div>
+
 <div class="toast" id="toast">Adicionado à sacolinha 🛍️</div>
 
 <script>
@@ -312,14 +348,15 @@ function render(){
     const card = document.createElement('div');
     card.className = 'card' + (sold ? ' esgotado' : '');
     card.innerHTML = `
-      <div class="foto">
+      <div class="foto" onclick="abrirProduto('${p.id}')">
         <img src="${p.img}" alt="${p.name}" loading="lazy">
         ${p.badge ? `<span class="selo">${p.badge}</span>` : ''}
         ${sold ? '<span class="stamp">ESGOTADO</span>' : '<span class="unica">✿ peça única</span>'}
       </div>
       <div class="corpo">
-        <h3>${p.name}</h3>
+        <h3 onclick="abrirProduto('${p.id}')">${p.name}</h3>
         <div class="desc">${p.desc}</div>
+        <span class="dica" onclick="abrirProduto('${p.id}')" style="cursor:pointer">🔍 tocar pra ver de pertinho</span>
         <div class="linha-preco">
           <div class="preco">${brl(p.price)}<small>no Pix ou cartão</small></div>
           <button class="btn-add" ${sold ? 'disabled' : ''} onclick="add('${p.id}')">${sold ? 'Esgotado' : 'Adicionar'}</button>
@@ -395,6 +432,53 @@ $('form').addEventListener('submit', e => {
   window.open(`https://wa.me/${WHATS}?text=${encodeURIComponent(msg)}`, '_blank');
 });
 
+/* DETALHE DO PRODUTO */
+function abrirProduto(id){
+  const p = PRODUCTS.find(x => x.id === id); if (!p) return;
+  const sold = SOLD.includes(id);
+  const noCarrinho = cart.includes(id);
+  const rel = PRODUCTS.filter(x => x.id !== id && categoria(x) === categoria(p) && !SOLD.includes(x.id)).slice(0, 3);
+  const rel2 = rel.length ? rel : PRODUCTS.filter(x => x.id !== id && !SOLD.includes(x.id)).slice(0, 3);
+  $('det').innerHTML = `
+    <button class="fechar" onclick="fecharProduto()">✕</button>
+    <div class="det-grid">
+      <div class="det-foto">
+        <img src="${p.img}" alt="${p.name}">
+        ${p.badge ? `<span class="selo">${p.badge}</span>` : ''}
+        ${sold ? '<span class="stamp">ESGOTADO</span>' : '<span class="unica">✿ peça única</span>'}
+      </div>
+      <div class="det-info">
+        <div class="hand">feito à mão pela Leni</div>
+        <h2>${p.name}</h2>
+        <p class="desc">${p.desc}</p>
+        <ul class="det-lista">
+          <li>✿ <b>Peça única</b> — montada à mão, uma a uma. Não existe outra igual!</li>
+          <li>🎁 Vai embalada pra presente, com bilhetinho da Leni</li>
+          <li>💧 Pra durar muito: evite molhar e guardar junto com perfumes</li>
+          <li>🚗 Entrega local ou retirada — combinados no WhatsApp</li>
+        </ul>
+        <div class="det-preco">${brl(p.price)}<small>no Pix ou cartão, combinado com a Leni</small></div>
+        <div class="det-acoes">
+          ${sold ? '<button class="btn-det-add" disabled>Peça esgotada 😢</button>'
+            : noCarrinho ? `<button class="btn-det-add" onclick="fecharProduto();abrirCarrinho()">✓ Já está na sua sacolinha</button>`
+            : `<button class="btn-det-add" onclick="add('${p.id}');abrirProduto('${p.id}')">Adicionar à sacolinha 🛍️</button>`}
+          ${!sold && noCarrinho ? '<button class="btn-det-fin" onclick="fecharProduto();abrirCarrinho()">Finalizar pedido →</button>' : ''}
+        </div>
+      </div>
+    </div>
+    ${rel2.length ? `<div class="det-rel"><h4>você também pode amar... 💛</h4><div class="rel-grid">${rel2.map(r => `
+      <div class="rel" onclick="abrirProduto('${r.id}')"><img src="${r.img}" alt=""><div><div class="rn">${r.name}</div><div class="rp">${brl(r.price)}</div></div></div>`).join('')}</div></div>` : ''}`;
+  $('det-fundo').classList.add('aberto');
+  document.body.style.overflow = 'hidden';
+  history.replaceState(null, '', '#p=' + id);
+}
+function fecharProduto(){
+  $('det-fundo').classList.remove('aberto');
+  document.body.style.overflow = '';
+  history.replaceState(null, '', location.pathname);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharProduto(); });
+
 /* faixa animada por script (não trava com 'reduzir movimento') */
 (function(){
   const frases = 'feito com amor ✿ peças únicas ✿ direto da casa da Leni ✿ presente perfeito ✿ montado à mão, um a um ✿ ';
@@ -412,6 +496,7 @@ $('form').addEventListener('submit', e => {
 })();
 
 render();
+(function(){ const m = location.hash.match(/#p=([\w-]+)/); if (m) abrirProduto(m[1]); })();
 </script>
 </body>
 </html>
